@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Flavorly"
+rootProject.name = "Smoke $ Grill"
 include(":app")
  

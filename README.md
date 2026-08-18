@@ -1,6 +1,6 @@
-# Flavorly 🥘
+# Smoke $ Grill 🥘
 
-**Flavorly** is a vibrant, budget-conscious Android application designed for Kenyan youth and culinary enthusiasts. It provides a curated collection of authentic Kenyan recipes with estimated costs in KES to help users plan affordable and delicious meals.
+**Smoke $ Grill** is a vibrant, budget-conscious Android application designed for Kenyan youth and culinary enthusiasts. It provides a curated collection of authentic Kenyan recipes with estimated costs in KES to help users plan affordable and delicious meals.
 
 ## 🚀 Features
 
@@ -27,7 +27,7 @@
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/Flavorly.git
+   git clone https://github.com/YOUR_USERNAME/Smoke-and-Grill.git
    ```
 2. Open the project in **Android Studio**.
 3. Sync the project with Gradle files.
@@ -35,7 +35,7 @@
 
 ## 🤝 Contributing
 
-Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/YOUR_USERNAME/Flavorly/issues).
+Contributions, issues, and feature requests are welcome! Feel free to check the [issues page](https://github.com/YOUR_USERNAME/Smoke-and-Grill/issues).
 
 ## 📝 License
 
