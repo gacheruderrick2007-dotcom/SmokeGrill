@@ -1,3 +1,4 @@
+// Updated August 27, 2026
 pluginManagement {
     repositories {
         google {
