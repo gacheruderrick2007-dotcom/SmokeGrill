@@ -64,10 +64,14 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel(), onNavigateToProfile: () -
     )
 
     val filteredRecipes = recipes.filter { recipe ->
-        val matchesSearch = recipe.title.contains(searchQuery, ignoreCase = true) ||
-                recipe.description.contains(searchQuery, ignoreCase = true)
-        val matchesCategory = selectedCategory == "All" || recipe.category == selectedCategory
-        matchesSearch && matchesCategory
+        if (searchQuery.isNotEmpty()) {
+            recipe.title.contains(searchQuery, ignoreCase = true) ||
+                    recipe.description.contains(searchQuery, ignoreCase = true) ||
+                    recipe.category.contains(searchQuery, ignoreCase = true) ||
+                    recipe.ingredients.any { it.contains(searchQuery, ignoreCase = true) }
+        } else {
+            selectedCategory == "All" || recipe.category == selectedCategory
+        }
     }
 
     // Gradient Brush for background
@@ -129,6 +133,13 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel(), onNavigateToProfile: () -
                             .padding(16.dp),
                         placeholder = { Text("Search recipes...") },
                         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Clear search")
+                                }
+                            }
+                        },
                         singleLine = true,
                         shape = MaterialTheme.shapes.medium,
                         colors = OutlinedTextFieldDefaults.colors(
@@ -139,68 +150,136 @@ fun HomeScreen(viewModel: HomeViewModel = viewModel(), onNavigateToProfile: () -
                     )
                 }
 
-                // Categories Section
-                item {
-                    Text(
-                        text = "Explore & Filter",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        fontWeight = FontWeight.Bold
-                    )
-                    LazyRow(
-                        modifier = Modifier.fillMaxWidth(),
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        items(categories) { category ->
-                            CategoryChip(
-                                category = category,
-                                isSelected = selectedCategory == category,
-                                onClick = { 
-                                    viewModel.selectCategory(category)
-                                    // Navigate to site if URL exists
-                                    categoryUrls[category]?.let { url ->
-                                        uriHandler.openUri(url)
+                if (searchQuery.isEmpty()) {
+                    // Categories Section
+                    item {
+                        Text(
+                            text = "Explore & Filter",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            fontWeight = FontWeight.Bold
+                        )
+                        LazyRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(categories) { category ->
+                                CategoryChip(
+                                    category = category,
+                                    isSelected = selectedCategory == category,
+                                    onClick = {
+                                        viewModel.selectCategory(category)
+                                        // Navigate to site if URL exists
+                                        categoryUrls[category]?.let { url ->
+                                            uriHandler.openUri(url)
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
+
+                    // Cooking Animation Section
+                    item {
+                        CookingAnimationSection()
+                    }
+
+                    // Popular Dishes Header
+                    item {
+                        Text(
+                            text = "Popular Kenyan Dishes",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    if (isLoading) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    } else {
+                        items(filteredRecipes) { recipe ->
+                            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                                RecipeItem(
+                                    recipe,
+                                    onDelete = { recipe.id?.let { viewModel.deleteRecipe(it) } })
+                            }
                         }
                     }
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
 
-                // Cooking Animation Section
-                item {
-                    CookingAnimationSection()
-                }
-
-                // Popular Dishes Header
-                item {
-                    Text(
-                        text = "Popular Kenyan Dishes",
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                if (isLoading) {
+                    // Pilau Image Section
                     item {
-                        Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator()
-                        }
+                        PilauImageSection()
                     }
                 } else {
-                    items(filteredRecipes) { recipe ->
-                        Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                            RecipeItem(recipe, onDelete = { recipe.id?.let { viewModel.deleteRecipe(it) } })
+                    // Search Mode
+                    item {
+                        Text(
+                            text = "Search Results for '$searchQuery'",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+
+                    if (isLoading) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(200.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    } else if (filteredRecipes.isEmpty()) {
+                        item {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    Icons.Default.SearchOff,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(64.dp),
+                                    tint = MaterialTheme.colorScheme.secondary
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text(
+                                    text = "No recipes found",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "Try searching for something else, like 'Ugali', 'Chapati', or 'Nyama Choma'.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                            }
+                        }
+                    } else {
+                        items(filteredRecipes) { recipe ->
+                            Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                                RecipeItem(
+                                    recipe,
+                                    onDelete = { recipe.id?.let { viewModel.deleteRecipe(it) } })
+                            }
                         }
                     }
-                }
-                
-                // Pilau Image Section
-                item {
-                    PilauImageSection()
                 }
                 
                 item {
@@ -403,7 +482,11 @@ fun RecipeItem(recipe: Recipe, onDelete: () -> Unit) {
                     }
 
                     Button(
-                        onClick = { /* Navigate to details or open URL */ },
+                        onClick = {
+                            recipe.webUrl?.let { url ->
+                                uriHandler.openUri(url)
+                            }
+                        },
                         shape = MaterialTheme.shapes.medium
                     ) {
                         Text("View Recipe")
